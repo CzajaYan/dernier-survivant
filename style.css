@@ -1,0 +1,15 @@
+:root{--bg:#eef1f6;--fg:#14213d;--card:#fff;--mut:#667089;--ac:#3b4cca;--ok:#18794e;--bad:#c2303a;--bd:#d6dce8}
+@media(prefers-color-scheme:dark){:root{--bg:#0f1626;--fg:#e8ecf7;--card:#18223a;--mut:#93a0bf;--ac:#8ea2ff;--ok:#5fd39a;--bad:#ff8a8f;--bd:#2a3757}}
+*{box-sizing:border-box}body{margin:0;font:16px/1.45 'Avenir Next','Segoe UI',system-ui,sans-serif;background:var(--bg);color:var(--fg)}
+#app{max-width:620px;margin:auto;padding:16px}
+h1{font-size:30px;font-weight:800;letter-spacing:-1px;margin:6px 0 10px}h2{margin:4px 0;font-size:24px}
+.c{background:var(--card);border:1px solid var(--bd);border-radius:14px;padding:14px;margin:10px 0}
+button{font:inherit;border:1px solid var(--bd);background:var(--card);color:var(--fg);border-radius:10px;padding:10px 14px;margin:3px;cursor:pointer}
+button:focus-visible,input:focus-visible{outline:3px solid var(--ac)}
+button.p{background:var(--ac);color:var(--bg);border-color:var(--ac);font-weight:700}button:disabled{opacity:.4}
+input{font:inherit;padding:10px;border:1px solid var(--bd);border-radius:10px;background:var(--bg);color:var(--fg);width:100%;margin:3px 0}
+.row{display:flex;justify-content:space-between;gap:8px;align-items:center;padding:5px 0}
+.dead{opacity:.4;text-decoration:line-through}.m{color:var(--mut);font-size:14px}
+.code{font:800 44px ui-monospace,monospace;letter-spacing:8px;text-align:center;color:var(--ac)}
+.g{display:grid;grid-template-columns:1fr 80px;gap:6px;align-items:center}
+.cl{border-left:4px solid var(--ac);padding:4px 10px;margin:6px 0}
