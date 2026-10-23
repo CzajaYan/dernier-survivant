@@ -12,17 +12,25 @@ function render(){const a=$('app');
   else h+='<p class=m>En attente du lancement par l\'hôte…</p>';
   a.innerHTML=h;return}
  h+=`<div class=c><div class=m>Manche ${V.round} · morts : ${V.deaths} · coût : ${V.cfg.cost+V.deaths} pour ${cur?E(cur.name):''} (joueur actif), ${V.deaths} pour les autres</div>${P.map(p=>`<div class="row ${p.alive?'':'dead'}"><span>${E(p.name)}${p==cur&&p.alive?' 🎤':''}${p.id==me?' (vous)':''}</span><span>${p.done?'✓ ':''}<b>${p.pts}</b></span></div>`).join('')}</div>`;
+ const myTurn=ph=='cards'&&V.turn==me,drawing=myTurn&&V.step=='draw';
+ h+=`<div class=c><b>Milieu</b> <span class=m>(${V.mid.length} carte(s), nettoyé au-delà de ${P.filter(p=>p.alive).length*3})</span><br>${V.mid.length?V.mid.map(x=>`<button ${drawing&&x.n!=V.myPosed?'':'disabled'} onclick="send({t:'take',n:${x.n}})">${CD[x.c][0]}<br><span class=m>posée par ${E(x.by)}</span></button>`).join(''):'<span class=m>vide</span>'}${drawing?`<br><button class=p ${V.deckN?'':'disabled'} onclick="send({t:'drawpile'})">Piocher (${V.deckN} dans la pioche)</button>`:''}</div>`;
  if(ph=='over'){h+=`<div class=c><h2>🏆 ${E(V.winner)} gagne !</h2></div>`}
  else{h+=`<div class=c><span class=m>${V.theme}</span><h2>${E(V.title)}</h2>`;
   if(V.mine.menace)h+=`<p style="color:var(--bad)">💀 Vous êtes menacé (×${V.mine.menace})</p>`;
   if(V.mine.handicap)h+='<p style="color:var(--bad)">⛓️ Handicap : votre palier est réduit d\'un cran</p>';
   if(V.mine.adv)h+='<p style="color:var(--ok)">🍀 Avantage : un indice de plus</p>';
   h+='</div>'}
- if(ph=='cards'&&mp.alive&&!mp.done){
-  h+=`<div class=c><b>Jouez une carte ou passez</b> <span class=m>(avant les annonces)</span><br>`;
-  if(pend)h+=`<p>${CD[pend][0]} : choisissez la cible</p>`+P.filter(p=>p.alive&&p.id!=me).map(p=>`<button onclick="play('${p.id}')">${E(p.name)}</button>`).join('')+`<button onclick="pend=null;render()">Annuler</button>`;
-  else h+=mp.hand.map(c=>`<button onclick="pick('${c}')" title="${E(CD[c][2])}">${CD[c][0]}<br><span class=m>${E(CD[c][2])}</span></button>`).join('')+`<br><button class=p onclick="send({t:'pass'})">Passer</button>`;
-  h+='</div>'}
+ if(ph=='cards'){
+  const tp=P.find(p=>p.id==V.turn);
+  h+=`<div class=c><span class=m>Ordre de jeu, en commençant par le micro 🎤 :</span><br>${V.order.map(o=>o.id==V.turn?`<b>${E(o.name)}</b>`:E(o.name)).join(' → ')}</div>`;
+  if(myTurn&&V.step=='pose')h+=`<div class=c><b>À vous (1/3) : débarrassez-vous d'une carte au milieu</b><br>${mp.hand.map(c=>`<button onclick="send({t:'pose',card:'${c}'})">${CD[c][0]}</button>`).join('')}</div>`;
+  else if(myTurn&&V.step=='play'){h+=`<div class=c><b>À vous (3/3) : jouez une carte</b><br>`;
+   if(pend)h+=`<p>${CD[pend][0]} : choisissez la cible</p>`+P.filter(p=>p.alive&&p.id!=me).map(p=>`<button onclick="play('${p.id}')">${E(p.name)}</button>`).join('')+`<button onclick="pend=null;render()">Annuler</button>`;
+   else h+=mp.hand.map(c=>`<button onclick="pick('${c}')">${CD[c][0]}<br><span class=m>${E(CD[c][2])}</span></button>`).join('');
+   h+='</div>'}
+  else if(myTurn)h+='<p><b>À vous (2/3) : piochez ou prenez une carte du milieu.</b></p>';
+  else if(tp)h+=`<p class=m>Au tour de ${E(tp.name)} ${V.step=='pose'?'de se débarrasser d\'une carte':V.step=='draw'?'de piocher ou prendre':'de jouer une carte'}…</p>`;
+  if(mp.alive&&mp.hand)h+=`<div class=c><span class=m>Votre main :</span> ${mp.hand.map(c=>CD[c][0]).join(' · ')||'vide'}</div>`}
  else if(ph=='announce'&&mp.alive&&!mp.done)h+=`<div class=c><b>Avec combien d'indices pensez-vous trouver ?</b><br>${[1,2,3].map(n=>`<button onclick="send({t:'ann',n:${n}})">${n} indice${n>1?'s':''}<br><span class=m>+${V.cfg['g'+n]} / −${V.cfg.loss}</span></button>`).join('')}</div>`;
  else if(ph=='answer'){
   h+=`<div class=c>${V.clues.map((c,i)=>`<div class=cl><span class=m>Indice ${i+1}</span><br>${E(c)}</div>`).join('')}`;
@@ -33,7 +41,7 @@ function render(){const a=$('app');
  else if(ph=='result'||ph=='over'){
   h+=`<div class=c><b>Réponse : ${E(V.answer)}</b>${P.filter(p=>p.ans!=null).map(p=>`<div class=row><span>${E(p.name)} <span class=m>${p.eff} ind. · « ${E(p.ans)} »</span></span><b style="color:var(--${p.ok?'ok':'bad'})">${p.d>0?'+':''}${p.d}</b></div>`).join('')}</div>`}
  if(!mp.alive&&ph!='over')h+='<p class=m>Vous êtes éliminé : vous regardez la fin de la partie.</p>';
- else if(mp.done&&ph!='result')h+='<p class=m>En attente des autres joueurs…</p>';
+ else if(mp.done&&ph!='result'&&ph!='cards')h+='<p class=m>En attente des autres joueurs…</p>';
  if(V.log.length)h+=`<div class=c>${V.log.map(l=>`<div class=m>${E(l)}</div>`).join('')}</div>`;
  if(ph=='result')h+=host?'<button class=p onclick="send({t:\'next\'})">Manche suivante</button>':'<p class=m>L\'hôte lance la manche suivante…</p>';
  a.innerHTML=h;const i=$('an');if(i)i.focus()}
